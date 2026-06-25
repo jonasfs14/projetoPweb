@@ -1,26 +1,42 @@
-import { useQuery } from '@tanstack/react-query';
-import { useMemo } from 'react';
-import { Task } from '../types/task';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Task } from '../backend/repositores/task.repository';
 
-const MOCK_TASKS: Task[] = [
-  { id: '1', title: 'Criar Repositório do GitHub', description: 'Configurar o projeto inicial para a equipe.', status: 'Concluído', createdAt: '2026-06-24' },
-  { id: '2', title: 'Desenvolver o Front-end', description: 'Implementar os componentes e hooks do Next.js.', status: 'Em Progresso', createdAt: '2026-06-24' },
-  { id: '3', title: 'Fazer Deploy na Vercel', description: 'Conectar o GitHub à Vercel para deploy automático.', status: 'Pendente', createdAt: '2026-06-24' },
-];
+// Função para buscar dados da API do Back-end
+async function fetchTasks(status: string): Promise<Task[]> {
+  const url = status && status !== 'Todas' ? `/api/tasks?status=${status}` : '/api/tasks';
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Erro ao buscar tarefas');
+  return res.json();
+}
 
-export function useTasks(filterStatus?: string) {
+// Função para enviar dados para a API do Back-end
+async function createTask(newTask: Omit<Task, 'id' | 'createdAt'>): Promise<Task> {
+  const res = await fetch('/api/tasks', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(newTask),
+  });
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.errors?.join(', ') || 'Erro ao criar tarefa');
+  }
+  return res.json();
+}
+
+export function useTasks(status: string = 'Todas') {
+  const queryClient = useQueryClient();
+
   const { data: tasks = [], isLoading } = useQuery<Task[]>({
-    queryKey: ['tasks'],
-    queryFn: async () => {
-      await new Promise((resolve) => setTimeout(resolve, 500)); // Simula delay de rede
-      return MOCK_TASKS;
+    queryKey: ['tasks', status],
+    queryFn: () => fetchTasks(status),
+  });
+
+  const mutation = useMutation({
+    mutationFn: createTask,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
     },
   });
 
-  const filteredTasks = useMemo(() => {
-    if (!filterStatus || filterStatus === 'Todas') return tasks;
-    return tasks.filter((task) => task.status === filterStatus);
-  }, [tasks, filterStatus]);
-
-  return { tasks: filteredTasks, isLoading };
+  return { tasks, isLoading, addTask: mutation.mutateAsync };
 }
