@@ -1,5 +1,5 @@
 import { TaskRepository, Task } from '../repositories/task.repository';
-import { CreateTaskDto } from '../dto/create-task.dto';
+import { CreateTaskDto } from '../repositories/dto/create-task.dto';
 
 export class TasksService {
   private repository = new TaskRepository();
