@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { TasksService } from '../../../backend/services/tasks.service';
-import { validateCreateTaskDto } from '../../../backend/repositores/dto/create-task.dto';
+import { validateCreateTaskDto } from '../../../backend/repositories/dto/create-task.dto';
 const tasksService = new TasksService();
 
 // Endpoint GET - Buscar tarefas

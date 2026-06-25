@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Task } from '../backend/repositores/task.repository';
+import { Task } from '../backend/repositories/task.repository';
 
 // Função para buscar dados da API do Back-end
 async function fetchTasks(status: string): Promise<Task[]> {
